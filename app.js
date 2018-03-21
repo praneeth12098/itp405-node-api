@@ -23,6 +23,37 @@ app.get('/genres', function(request, response) {
 	});
 });
 
+app.get('/api/artists', function(request, response) {
+	let connection = connect();
+
+	let artist = request.query.filter;
+
+	if(artist) {
+		let promise = connection.select('ArtistId as id', 'Name as name')
+								.from('artists')
+								.where('name', 'like', `%${artist}%`);
+
+		promise.then(function(artists) {
+			response.json(artists);
+		}, function() {
+			response.json({
+				error: 'Something went wrong finding artists'
+			});
+		});
+	} else {
+
+		let promise = connection.select('ArtistId as id', 'Name as name').from('artists');
+
+		promise.then(function(artists) {
+			response.json(artists);
+		}, function() {
+			response.json({
+				error: 'Something went wrong when finding artists'
+			});
+		});
+	}
+});
+
 
 app.get('/genres/:id', function(request, response) {
 	let connection = connect();
