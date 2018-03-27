@@ -1,7 +1,36 @@
 const express = require('express');
 const knex = require('knex');
-
+const connect = require('./connect');
 const app = express();
+
+const Genre = require('./models/Genre');
+const Track = require('./models/Track');
+
+app.get('/v2/genres', function(request, response) {
+	Genre.fetchAll().then(function(genres) {
+		response.json(genres);
+	}, function() {
+		response.json({
+			error: 'Something went wrong when finding genres'
+		});
+	});
+});
+
+app.get('/v2/genres/:id', function(request, response) {
+	let id = request.params.id;
+	let genre = new Genre({ GenreId: id});
+	genre.fetch().then(function(genre) {
+		if(!genre) {
+			throw new Error();
+		} else {
+			response.json(genre);
+		}
+	}).then(null, function() {
+		response.status(404).json({
+			error: `Genre ${id} not found`
+		});
+	});
+});
 
 
 app.get('/genres', function(request, response) {
@@ -74,16 +103,22 @@ app.get('/genres/:id', function(request, response) {
 	});
 });
 
-function connect() {
-	let connection = knex({
-		client: 'sqlite3',
-		connection: {
-			filename: './database.sqlite'
-		}
-	});
+app.delete('/tracks/:id', function(request, response) {
+	// let connection = connect();
 
-	return connection;
-}
+	let id = request.params.id;
+
+	let track = new Track({ TrackId: id});
+	track.destroy().then(function(track) {
+		if(track) {
+			response.status(204).send();
+		}
+	}).catch(function(error) {
+		response.status(404).json({
+			error: `Track ${id} not found`
+		});
+	});
+});
 
 const port = process.env.PORT || 8000;
 
