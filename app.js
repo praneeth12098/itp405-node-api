@@ -3,114 +3,40 @@ const knex = require('knex');
 const connect = require('./connect');
 const app = express();
 
-const Genre = require('./models/Genre');
-const Track = require('./models/Track');
+const User = require('./models/User');
 
-app.get('/v2/genres', function(request, response) {
-	Genre.fetchAll().then(function(genres) {
-		response.json(genres);
+app.get('/users', function(request, response) {
+	User.fetchAll().then(function(users) {
+		response.json(users);
 	}, function() {
-		response.json({
-			error: 'Something went wrong when finding genres'
+		response.status(404).json({
+			error: 'Something went wrong when finding users'
 		});
 	});
 });
 
-app.get('/v2/genres/:id', function(request, response) {
-	let id = request.params.id;
-	let genre = new Genre({ GenreId: id});
-	genre.fetch().then(function(genre) {
-		if(!genre) {
+app.get('/users/:id', function(request, response) {
+	let u_id = request.params.id;
+	let user = new User({ id: u_id });
+	user.fetch().then(function(user) {
+		if(!user) {
 			throw new Error();
 		} else {
-			response.json(genre);
+			response.json(user);
 		}
 	}).then(null, function() {
 		response.status(404).json({
-			error: `Genre ${id} not found`
+			error: `User ${u_id} not found`
 		});
 	});
 });
 
+app.delete('users/:id', function(request, response) {
+	let u_id = request.params.id;
+	let user = new User({ id: u_id });
 
-app.get('/genres', function(request, response) {
-	let connection = connect();
-
-	// select all from genres table
-	// 3 states of promises: pending state, resolved (success) state, rejected (error) state
-	let promise = connection.select().from('genres');
-	// pending
-	promise.then(function(genres) {
-		// success
-		// if successful it will receive the data which is why we pass in genres
-		response.json(genres);
-	}, function() {
-		//error
-		response.json({
-			error: 'Something went wrong when finding genres'
-		});
-	});
-});
-
-app.get('/api/artists', function(request, response) {
-	let connection = connect();
-
-	let artist = request.query.filter;
-
-	if(artist) {
-		let promise = connection.select('ArtistId as id', 'Name as name')
-								.from('artists')
-								.where('name', 'like', `%${artist}%`);
-
-		promise.then(function(artists) {
-			response.json(artists);
-		}, function() {
-			response.json({
-				error: 'Something went wrong finding artists'
-			});
-		});
-	} else {
-
-		let promise = connection.select('ArtistId as id', 'Name as name').from('artists');
-
-		promise.then(function(artists) {
-			response.json(artists);
-		}, function() {
-			response.json({
-				error: 'Something went wrong when finding artists'
-			});
-		});
-	}
-});
-
-
-app.get('/genres/:id', function(request, response) {
-	let connection = connect();
-
-	let id = request.params.id;
-
-	let promise = connection.select()
-							.from('genres')
-							.where('GenreId', id)
-							.first();
-
-	promise.then(function(genre) {
-		response.json(genre);
-	}, function() {
-		response.json({
-			error: 'Cannot find genre ' + id
-		});
-	});
-});
-
-app.delete('/tracks/:id', function(request, response) {
-	// let connection = connect();
-
-	let id = request.params.id;
-
-	let track = new Track({ TrackId: id});
-	track.destroy().then(function(track) {
-		if(track) {
+	user.destroy().then(function(user) {
+		if(user) {
 			response.status(204).send();
 		}
 	}).catch(function(error) {

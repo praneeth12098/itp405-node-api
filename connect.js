@@ -4,7 +4,7 @@ function connect() {
 	let connection = knex({
 		client: 'sqlite3',
 		connection: {
-			filename: './database.sqlite'
+			filename: './db.sqlite'
 		}
 	});
 
